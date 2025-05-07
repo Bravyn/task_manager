@@ -38,4 +38,38 @@ def create_task():
     db.session.add(new_task)
     db.session.commit()   
 
-    return jsonify({"message": "Task created", id: new_task.id}), 201
+    return jsonify({"message": "Task created", "id": new_task.id}), 201
+
+@bp.route('/<int:task_id>', methods = ['PUT'])
+@jwt_required()
+def update_task(task_id):
+    user_id = get_jwt_identity()
+    task = Task.query.filter_by(id=task_id, user_id = user_id).first()
+
+    if not task:
+        return jsonify({"Error: Task does not exist"}), 404
+        
+    data = request.get_json()
+    task.title = data.get('title', task.title)
+    task.description = data.get('description', task.description)
+    task.completed = data.get('completed', task.completed)
+    if data.get('due_date'):
+        task.due_date = datetime.fromisoformat(data['due_date'])
+
+    db.session.commit()
+    return jsonify({"message": "Task Updated Successfully!"}), 200
+
+#delete task
+@bp.route('/<int:task_id>', methods = ['DELETE'])
+@jwt_required()
+def delete_task(task_id):
+    user_id = get_jwt_identity()
+    task = Task.query.filter_by(id = task_id, user_id = user_id).first()
+
+    if not task:
+        return jsonify({"Error:" : "Task not found"}), 404
+    
+    db.session.delete(task)
+    db.session.commit()
+    return jsonify({"message": "Task deleted successfully"}), 200
+
