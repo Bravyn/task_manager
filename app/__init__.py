@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_mail import Mail
+from .extensions import mail, scheduler, db
+from .reminders import send_reminders
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -14,6 +16,9 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object('config.Config')
+
+    mail.init_app(app)
+    scheduler.start()
 
 
     db.init_app(app)
@@ -27,5 +32,7 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    
+    scheduler.add_job(func=send_reminders, trigger="interval", minutes = 60)
     return app
 
