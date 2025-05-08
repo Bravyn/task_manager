@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 from flask_mail import Message
 from app.extensions import Mail
 from app.models import Task, User, db
+from flask import Blueprint, jsonify
+
+bp = Blueprint('reminders', __name__)
 
 def send_reminders():
     now = datetime.utcnow()
@@ -29,3 +32,9 @@ def send_reminders():
             Mail.send(msg)
         except Exception as e:
             print(f"Error sending email to {user.email} {str(e)}")
+
+
+@bp.route('/trigger-reminders', methods = ['POST'])
+def trigger_reminders():
+    send_reminders()
+    return jsonify({"message": "Reminder triggered"}), 200
